@@ -1,4 +1,7 @@
+from typing import Callable
 from numpy.typing import ArrayLike
+import numpy as np
+from findiff import FinDiff
 import matplotlib.pyplot as plt
 
 
@@ -11,6 +14,7 @@ def plot_colorline(
     max_lw: float = 3.0,
     min_lw: float = 0.5,
     min_alpha: float = 1.0,
+    min_zorder: int = 40,
     **plot_kwargs,
 ) -> tuple[plt.Axes, plt.cm.ScalarMappable]:
     if ax is None:
@@ -27,6 +31,7 @@ def plot_colorline(
             c=colormap.to_rgba(t),
             alpha=1 - (1 - min_alpha) * norm(t),
             lw=(max_lw - (max_lw - min_lw) * norm(t)),
+            zorder=min_zorder + i,
             **plot_kwargs,
         )
     return ax, colormap
@@ -40,6 +45,7 @@ def plot_mosaic_phase(
     max_lw: float = 3.0,
     min_lw: float = 0.5,
     min_alpha: float = 1.0,
+    min_zorder: int = 40,
     **plot_kwargs,
 ) -> tuple[plt.Figure, dict[str, plt.Axes]]:
     fig, axs_dict = plt.subplot_mosaic(
@@ -48,7 +54,16 @@ def plot_mosaic_phase(
         constrained_layout=True,
     )
     _, colormap = plot_colorline(
-        t, u, v, cmap_name, axs_dict["A"], max_lw, min_lw, min_alpha, **plot_kwargs
+        t,
+        u,
+        v,
+        cmap_name,
+        axs_dict["A"],
+        max_lw,
+        min_lw,
+        min_alpha,
+        min_zorder,
+        **plot_kwargs,
     )
     axs_dict["A"].grid(True)
     axs_dict["A"].set_xlabel(r"$x = u$")
@@ -57,7 +72,16 @@ def plot_mosaic_phase(
     plt.colorbar(colormap, ax=axs_dict["A"], label="$t$", location="right")
 
     plot_colorline(
-        t, t, u, cmap_name, axs_dict["B"], max_lw, min_lw, min_alpha, **plot_kwargs
+        t,
+        t,
+        u,
+        cmap_name,
+        axs_dict["B"],
+        max_lw,
+        min_lw,
+        min_alpha,
+        min_zorder,
+        **plot_kwargs,
     )
     axs_dict["B"].grid(True)
     axs_dict["B"].set_xticklabels([])
@@ -66,7 +90,16 @@ def plot_mosaic_phase(
     axs_dict["B"].set_ylabel(r"$x = u$")
 
     plot_colorline(
-        t, t, v, cmap_name, axs_dict["C"], max_lw, min_lw, min_alpha, **plot_kwargs
+        t,
+        t,
+        v,
+        cmap_name,
+        axs_dict["C"],
+        max_lw,
+        min_lw,
+        min_alpha,
+        min_zorder,
+        **plot_kwargs,
     )
     axs_dict["C"].grid(True)
     axs_dict["C"].set_xlabel(r"$t$")
@@ -74,3 +107,57 @@ def plot_mosaic_phase(
     axs_dict["C"].yaxis.set_label_position("right")
     axs_dict["C"].set_ylabel(r"$\dot{x} = v$")
     return fig, axs_dict
+
+
+# Funciones redudantes con el notebook
+def runge_kutta_4_step(
+    f: Callable,
+    x_i: ArrayLike,
+    t_i: float,
+    dt: float,
+    **kwargs,
+) -> ArrayLike:
+    k_array = np.empty((4, x_i.size))
+    k_array[0] = f(t_i, x_i, **kwargs)
+    k_array[1] = f(t_i + dt * 0.5, x_i + dt * 0.5 * k_array[0], **kwargs)
+    k_array[2] = f(t_i + dt * 0.5, x_i + dt * 0.5 * k_array[1], **kwargs)
+    k_array[3] = f(t_i + dt, x_i + dt * k_array[2], **kwargs)
+    a_vec = np.array([1, 2, 2, 1]) / 6
+    a_vec = a_vec.reshape((4, 1))
+    return x_i + dt * np.sum(a_vec * k_array, axis=0)
+
+
+def runge_kutta_4(
+    f: Callable,
+    x_0: ArrayLike,
+    dt: float,
+    steps: int,
+    **kwargs,
+) -> ArrayLike:
+    x_vals = np.zeros((1 + steps, x_0.size))
+    x_vals[0] = x_0
+    for i in range(steps):
+        x_vals[i + 1] = runge_kutta_4_step(f, x_vals[i], i * dt, dt, **kwargs)
+    return x_vals
+
+
+def balance(
+    energia: Callable,
+    variacion_teorica: Callable,
+    u: ArrayLike,
+    v: ArrayLike,
+    dt: float,
+    **kwargs,
+) -> ArrayLike:
+    """
+    Esta función recibe u (x), v (dx/dt), parametros extra y
+    las funciónes de la energía y su derivada. Devuelve un vector
+    de balance que tiene la diferencia de la energía del sistema
+    en cada tiempo con respecto al valor teórico normalizado por
+    el valor inicial de la energía.
+    """
+    d_dt = FinDiff(0, dt, acc=6)
+    E = energia(u, v, **kwargs)
+    dEdt_numerico = d_dt(E)
+    dEdt_teorico = variacion_teorica(u, v, **kwargs)
+    return dt * (dEdt_numerico - dEdt_teorico) / E[0]
