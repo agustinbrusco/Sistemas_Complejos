@@ -1,8 +1,14 @@
+import sys
 from typing import Callable
 from numpy.typing import ArrayLike
 import numpy as np
 from findiff import FinDiff
 import matplotlib.pyplot as plt
+# Importo la barra de progreso de tqdm para notebooks o para la terminal
+if "ipykernel" in sys.modules:
+    from tqdm.notebook import tqdm
+else:
+    from tqdm import tqdm
 
 
 def plot_colorline(
@@ -107,6 +113,52 @@ def plot_mosaic_phase(
     axs_dict["C"].yaxis.set_label_position("right")
     axs_dict["C"].set_ylabel(r"$\dot{x} = v$")
     return fig, axs_dict
+
+
+def plot_fases(
+    list_resultados: list[tuple[ArrayLike, ArrayLike, ArrayLike]],
+    x_eq: ArrayLike,
+    cmap_name: str,
+    func: Callable = None,
+    func_kwargs: dict[str, float] = None,
+    ax: plt.Axes = None,
+    max_lw: float = 3.0,
+    min_lw: float = 0.5,
+    min_alpha: float = 1.0,
+    min_zorder: int = 40,
+    **plot_kwargs,
+) -> tuple[plt.Axes, plt.cm.ScalarMappable]:
+    if ax is None:
+        _, ax = plt.subplots(1, 1,)
+    for resultados in tqdm(
+        list_resultados, total=len(list_resultados), desc="Colorline Plots", leave=False
+    ):
+        t, u, v = resultados
+        ax, colormap = plot_colorline(
+            t, u, v, cmap_name, ax, max_lw, min_lw, min_alpha, min_zorder, **plot_kwargs
+        )
+    if x_eq is not None:
+        ax.plot(x_eq, [0 for val in x_eq], ".", ms=max_lw, c="k")
+    if func is not None:
+        stream_color = plt.colormaps[cmap_name](0.5)
+        u_lims = ax.get_xlim()
+        ax.set_xlim(u_lims)
+        v_lims = ax.get_ylim()
+        ax.set_ylim(v_lims)
+        U, V = np.meshgrid(
+            np.linspace(*u_lims, 100), np.linspace(*v_lims, 100), indexing="xy"
+        )
+        if func_kwargs is None:
+            func_kwargs = {}
+        dU, dV = func(0, (U, V), **func_kwargs)
+        ax.streamplot(
+            U, V, dU, dV,
+            color=stream_color, density=2., linewidth=min_lw, arrowsize=min_lw
+        )
+    ax.grid()
+    ax.set_xlabel(r"$x$")
+    ax.set_ylabel(r"$\dot{x}$")
+    return ax, colormap
 
 
 # Funciones redudantes con el notebook
