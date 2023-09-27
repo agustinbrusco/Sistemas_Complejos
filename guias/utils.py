@@ -3,12 +3,36 @@ from typing import Callable
 from numpy.typing import ArrayLike
 import numpy as np
 from findiff import FinDiff
-import matplotlib.pyplot as plt
 # Importo la barra de progreso de tqdm para notebooks o para la terminal
 if "ipykernel" in sys.modules:
     from tqdm.notebook import tqdm
 else:
     from tqdm import tqdm
+import matplotlib.pyplot as plt
+from matplotlib import colors
+from matplotlib import colormaps
+
+TEAL_COLORS = [
+    "#d8f3dc",
+    "#a3dbb9",
+    "#6cc297",
+    "#4aa57b",
+    "#3b8765",
+    "#2e6a4f",
+    "#214e3b",
+    "#153427",
+    "#081c15",
+]
+# Generate a matplotlib ListedColormap object
+TEAL_LISTEDCMAP = colors.ListedColormap(
+    colors=TEAL_COLORS, name="teal_discrete"
+)
+colormaps.register(TEAL_LISTEDCMAP, name="teal_discrete")
+# Generate a matplotlib linear segmented colormap object
+TEAL_LINEARCMAP = colors.LinearSegmentedColormap.from_list(
+    colors=TEAL_COLORS, name="teal_continuous"
+)
+colormaps.register(TEAL_LINEARCMAP, name="teal_continuous")
 
 
 def plot_colorline(
