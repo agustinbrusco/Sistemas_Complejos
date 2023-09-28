@@ -185,6 +185,35 @@ def plot_fases(
     return ax, colormap
 
 
+def plot_3d_evolution(
+    x_vals: ArrayLike,
+    t_vals: ArrayLike,
+    U_array: ArrayLike,
+    cmap_name: str,
+    x_sample_size: int = 100,
+    t_sample_size: int = 1,
+    ax: plt.Axes = None,
+) -> tuple[plt.Figure, plt.Axes, plt.cm.ScalarMappable]:
+    if ax is None:
+        fig = plt.figure(figsize=(5, 4))
+        ax = fig.add_subplot(111, projection="3d")
+    else:
+        fig = ax.get_figure()
+    colors = plt.cm.ScalarMappable(norm=plt.Normalize(0, t_vals.max(),), cmap=cmap_name)
+    X, T = np.meshgrid(x_vals, t_vals, indexing="ij")
+    ax.plot_surface(
+        X, T, U_array, facecolors=colors.to_rgba(T),
+        rcount=t_sample_size, ccount=x_sample_size, alpha=0.75
+    )
+    ax.grid()
+    ax.set_xlabel("$x$")
+    ax.set_xlim(x_vals.min(), x_vals.max())
+    ax.set_ylabel("$t$")
+    ax.set_ylim(t_vals.max(), t_vals.min())
+    ax.set_zlabel("$u$")
+    return fig, ax, colors
+
+
 # Funciones redudantes con el notebook
 def runge_kutta_4_step(
     f: Callable,
