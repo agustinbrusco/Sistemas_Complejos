@@ -1,8 +1,10 @@
 import sys
-from typing import Callable
+from typing import Callable, Any
 from numpy.typing import ArrayLike
 import numpy as np
+import torch
 from findiff import FinDiff
+import json
 # Importo la barra de progreso de tqdm para notebooks o para la terminal
 if "ipykernel" in sys.modules:
     from tqdm.notebook import tqdm
@@ -214,7 +216,52 @@ def plot_3d_evolution(
     return fig, ax, colors
 
 
-# Funciones redudantes con el notebook
+def plot_training_loss(
+    loss_vals,
+    color: str = None,
+    plot_every: int = 1,
+    axs: ArrayLike = None,
+    loss_plots_kwargs: dict[str, Any] = None,
+    diff_plots_kwargs: dict[str, Any] = None,
+) -> tuple[plt.Figure, ArrayLike]:
+    epochs = loss_vals.shape[0]
+    epoch_vals = np.arange(1, epochs + 1)
+    if axs is None:
+        fig, axs = plt.subplots(3, 2, sharex=True, figsize=(10, 4))
+    else:
+        fig = axs[0, 0].get_figure()
+    for ax_row, tag in zip(axs, ["CI MSE", "CC MSE", "EQ MSE"]):
+        ax_row[0].set_ylabel(tag)
+        ax_row[0].set_yscale("log")
+        ax_row[1].set_ylabel(r"$\Delta$" + tag)
+        ax_row[1].yaxis.tick_right()
+        ax_row[1].yaxis.set_label_position("right")
+        ax_row[0].set_xlim(0, epochs)
+        ax_row[1].set_xlim(0, epochs)
+    axs[-1, 0].set_xlabel("Epoch")
+    axs[-1, 1].set_xlabel("Epoch")
+    if loss_plots_kwargs is None:
+        loss_plots_kwargs = {}
+    if diff_plots_kwargs is None:
+        diff_plots_kwargs = {}
+    for loss_idx in range(3):
+        # Valores de Perdida
+        axs[loss_idx, 0].plot(
+            epoch_vals[::plot_every],
+            loss_vals[:epochs:plot_every, loss_idx],
+            "-", lw=1, color=color, **loss_plots_kwargs
+        )
+        # Derivada de la Perdida
+        delta_loss = np.diff(loss_vals[:, loss_idx])
+        axs[loss_idx, 1].plot(
+            epoch_vals[1::plot_every],
+            delta_loss[::plot_every],
+            ".", mec="k", mew=0.5, color=color, **diff_plots_kwargs
+        )
+    return fig, axs
+
+
+# Funciones redudantes con los notebooks
 def runge_kutta_4_step(
     f: Callable,
     x_i: ArrayLike,
@@ -266,3 +313,107 @@ def balance(
     dEdt_numerico = d_dt(E)
     dEdt_teorico = variacion_teorica(u, v, **kwargs)
     return dt * (dEdt_numerico - dEdt_teorico) / E[0]
+
+
+class CustomFunctionMLP(torch.nn.Module):
+    """
+    Multilayer perceptron (MLP) // Perceptríon Multicapa .
+
+    Esta clase define una red neuronal feedforward con múltiples capas ocultas
+    lineales, funciones de activación tangente hiperbólica en  las capas ocultas
+    y una salida lineal.
+
+    Args:
+        sizes (lista): Lista de enteros que especifica el número de neuronas en
+        cada capa. El primer elemento debe coincidir con la dimensión de entrada
+        y el último con la dimensión de salida.
+
+    Atributos:
+        capas (torch.nn.ModuleList): Lista que contiene las capas lineales del MLP.
+
+    Métodos:
+        forward(x): Realiza una pasada hacia adelante a través de la red MLP.
+
+    Ejemplo:
+        tamaños = [entrada_dim, oculta1_dim, oculta2_dim, salida_dim]
+        mlp = MLP(tamaños)
+        tensor_entrada = torch.tensor([...])
+        salida = mlp(tensor_entrada)
+    """
+    def __init__(self, sizes: list[int], activation: Callable = torch.tanh):
+        super().__init__()
+        self.layers = torch.nn.ModuleList()
+        for i in range(len(sizes) - 1):
+            self.layers.append(torch.nn.Linear(sizes[i], sizes[i + 1]))
+        self.custom_activation_function = activation
+
+    def forward(self, x):
+        h = x
+        for hidden in self.layers[:-1]:
+            h = self.custom_activation_function(hidden(h))
+        output = self.layers[-1]
+        return output(h)
+
+
+# Funciones para guardar y cargar información de los modelos
+def get_model_info(
+    model_name: str,
+    info_file_path: str = "modelos_entrenados/models_info.json",
+) -> dict[str, Any]:
+    """Trata de cargar la información del modelo etiquetado como `model_name` a partir \
+del archivo `info_file_path`.
+    """
+    # Try to load the file or create it if it doesn't exist
+    try:
+        with open(info_file_path, "r") as info_file:
+            models_info = json.load(info_file)
+    except FileNotFoundError as e:
+        raise FileNotFoundError(
+            f"Could not find model information file at {info_file_path}."
+        ) from e
+    try:
+        return models_info[model_name]
+    except KeyError as e:
+        raise KeyError(f"Model {model_name} not found in {info_file_path}.") from e
+
+
+def save_model_info(
+    model_name: str,
+    pinn: CustomFunctionMLP,
+    optimizer: torch.optim.Optimizer,
+    loss_weights: tuple[float],
+    epochs: int,
+    info_file_path: str = "modelos_entrenados/models_info.json",
+    **kwargs,
+) -> dict[str, dict[str, Any]]:
+    # Try to load the file or create it if it doesn't exist
+    try:
+        with open(info_file_path, "r") as info_file:
+            models_info = json.load(info_file)
+    except FileNotFoundError:
+        models_info = {}
+    update_dict = True
+    if model_name in models_info:
+        print(f"WARNING: model {model_name} already exists in the file.")
+        if input("Do you want to overwrite it? [y/n]: ").lower() != "y":
+            print("Model not saved.")
+            update_dict = False
+    if update_dict:
+        # Updates the information dictionary with the new model's information
+        models_info[model_name] = dict(
+            layers=[2] + [int(layer.out_features) for layer in pinn.layers],
+            activation=pinn.custom_activation_function.__name__,
+            optimizer=optimizer.__class__.__name__,
+            loss_weigths={
+                "IC": loss_weights[0],
+                "CC": loss_weights[1],
+                "Physics": loss_weights[2],
+            },
+            epochs=epochs,
+            **kwargs
+        )
+        # Saves the information dictionary to the file
+        with open(info_file_path, "w") as info_file:
+            json.dump(models_info, info_file, indent=4)
+        print(f"{model_name}'s information saved at {info_file_path}.")
+    return models_info

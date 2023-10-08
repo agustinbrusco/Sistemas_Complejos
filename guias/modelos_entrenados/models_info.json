@@ -1,0 +1,236 @@
+{
+    "burgers_solver_tanh_00": {
+        "layers": [
+            2,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_01": {
+        "layers": [
+            2,
+            10,
+            10,
+            10,
+            10,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_02": {
+        "layers": [
+            2,
+            20,
+            20,
+            20,
+            20,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_03": {
+        "layers": [
+            2,
+            30,
+            30,
+            30,
+            30,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_04": {
+        "layers": [
+            2,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_05": {
+        "layers": [
+            2,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_06": {
+        "layers": [
+            2,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_07": {
+        "layers": [
+            2,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            20,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    },
+    "burgers_solver_tanh_08": {
+        "layers": [
+            2,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            30,
+            1
+        ],
+        "activation": "tanh",
+        "optimizer": "Adam",
+        "loss_weigths": {
+            "IC": 1,
+            "CC": 1,
+            "Physics": 1
+        },
+        "epochs": 5000,
+        "ci_description": "sin(x) (N=100)",
+        "cc_description": "u(0,t) = u(2pi,t) = 0 (N=200)",
+        "physics_description": "u_t + u*u_x - nu*u_xx = 0 (N=100*100)",
+        "burgers_nu": 0
+    }
+}
