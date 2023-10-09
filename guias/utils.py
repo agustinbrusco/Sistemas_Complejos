@@ -218,46 +218,34 @@ def plot_3d_evolution(
 
 def plot_training_loss(
     loss_vals,
-    color: str = None,
     plot_every: int = 1,
     axs: ArrayLike = None,
-    loss_plots_kwargs: dict[str, Any] = None,
-    diff_plots_kwargs: dict[str, Any] = None,
+    **plot_kwargs,
 ) -> tuple[plt.Figure, ArrayLike]:
     epochs = loss_vals.shape[0]
     epoch_vals = np.arange(1, epochs + 1)
     if axs is None:
-        fig, axs = plt.subplots(3, 2, sharex=True, figsize=(10, 4))
+        fig, axs = plt.subplots(4, 1, sharex=True, figsize=(10, 4))
     else:
-        fig = axs[0, 0].get_figure()
-    for ax_row, tag in zip(axs, ["CI MSE", "CC MSE", "EQ MSE"]):
-        ax_row[0].set_ylabel(tag)
-        ax_row[0].set_yscale("log")
-        ax_row[1].set_ylabel(r"$\Delta$" + tag)
-        ax_row[1].yaxis.tick_right()
-        ax_row[1].yaxis.set_label_position("right")
-        ax_row[0].set_xlim(0, epochs)
-        ax_row[1].set_xlim(0, epochs)
-    axs[-1, 0].set_xlabel("Epoch")
-    axs[-1, 1].set_xlabel("Epoch")
-    if loss_plots_kwargs is None:
-        loss_plots_kwargs = {}
-    if diff_plots_kwargs is None:
-        diff_plots_kwargs = {}
+        fig = axs[0].get_figure()
+    for ax, tag in zip(axs, ["CI MSE", "CC MSE", "EQ MSE", "Total MSE"]):
+        ax.set_ylabel(tag, fontsize=12)
+        ax.set_yscale("log")
+        ax.set_xlim(0, epochs)
+    axs[-1].set_xlabel("Epoch")
     for loss_idx in range(3):
         # Valores de Perdida
-        axs[loss_idx, 0].plot(
+        axs[loss_idx].plot(
             epoch_vals[::plot_every],
             loss_vals[:epochs:plot_every, loss_idx],
-            "-", lw=1, color=color, **loss_plots_kwargs
+            **plot_kwargs
         )
-        # Derivada de la Perdida
-        delta_loss = np.diff(loss_vals[:, loss_idx])
-        axs[loss_idx, 1].plot(
-            epoch_vals[1::plot_every],
-            delta_loss[::plot_every],
-            ".", mec="k", mew=0.5, color=color, **diff_plots_kwargs
-        )
+    # Total Loss
+    axs[-1].plot(
+        epoch_vals[::plot_every],
+        loss_vals.sum(axis=1)[:epochs:plot_every],
+        **plot_kwargs
+    )
     return fig, axs
 
 
